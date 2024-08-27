@@ -10,7 +10,12 @@ TELEGRAM_TOKEN = '7247970905:AAFusLnzp6XpCDX5txtmUKZBdzRSqku5GyA'
 CHAT_ID = -4564242872
 
 # Настройка логирования
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
 
 # Множество для хранения идентификаторов событий, о которых уже было уведомление
 notified_events = set()
@@ -60,7 +65,7 @@ async def job():
         logging.info('Новых событий нет')
 async def main():
     # Запуск задачи каждые 5 минут
-    schedule.every(5).minutes.do(lambda: asyncio.create_task(job()))
+    schedule.every(3).minutes.do(lambda: asyncio.create_task(job()))
 
     while True:
         schedule.run_pending()
