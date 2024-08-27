@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  my_project:
+    build: .
+    container_name: my_project_container
+    volumes:
+      - .:/app
+    command: python /app/main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "8000:8000"

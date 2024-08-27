@@ -60,7 +60,7 @@ async def job():
         logging.info('Новых событий нет')
 async def main():
     # Запуск задачи каждые 5 минут
-    schedule.every(1).minutes.do(lambda: asyncio.create_task(job()))
+    schedule.every(5).minutes.do(lambda: asyncio.create_task(job()))
 
     while True:
         schedule.run_pending()
