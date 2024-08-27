@@ -27,14 +27,16 @@ def parse_events():
         events = [x for x in data['events']]
         result = []
         for event in events:
-            result.append({
-                'id': event['id'],
-                'home_team': event['homeTeam']['name'],
-                'home_score': event['homeScore']['current'],
-                'away_team': event['awayTeam']['name'],
-                'away_score': event['awayScore']['current'],
-                'played_time': event['time']['played']
-            })
+            if all(k in event for k in ('id', 'homeTeam', 'homeScore', 'awayTeam', 'awayScore', 'time')) and 'played' in \
+                    event['time']:
+                result.append({
+                    'id': event['id'],
+                    'home_team': event['homeTeam']['name'],
+                    'home_score': event['homeScore']['current'],
+                    'away_team': event['awayTeam']['name'],
+                    'away_score': event['awayScore']['current'],
+                    'played_time': event['time']['played']
+                })
         return result
     except Exception as e:
         logging.error(f"Ошибка при парсинге событий: {e}")
