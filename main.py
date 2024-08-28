@@ -27,7 +27,7 @@ def format_time(played_time):
     minutes = remaining_seconds // 60  # Минуты в текущем периоде
     seconds = remaining_seconds % 60  # Оставшиеся секунды
 
-    return f"{period} - {minutes} - {seconds}"
+    return f"{period} период, {minutes} минута, {seconds} секунда"
 
 
 # Множество для хранения идентификаторов событий, о которых уже было уведомление
@@ -63,7 +63,7 @@ async def check_conditions_and_notify(events, bot):
             if event['played_time'] > 1800 and (event['home_score'] == 0 or event['away_score'] == 0):
                 message = (f"Матч: {event['home_team']} vs {event['away_team']}\n\n"
                            f"Счет: {event['home_score']} - {event['away_score']}\n"
-                           f"Время игры: {format_time(event['played_time'])} секунд\n"
+                           f"Время игры: {format_time(event['played_time'])}\n"
                            "Один из счетов равен 0!")
                 logging.info(f"Отправка уведомления для события {event['id']}")
                 await bot.send_message(chat_id=CHAT_ID, text=message)
