@@ -17,6 +17,19 @@ logging.basicConfig(
 )
 
 
+def format_time(played_time):
+    # Каждый период длится 20 минут = 1200 секунд
+    seconds_per_period = 1200
+
+    period = (played_time // seconds_per_period) + 1  # Определение текущего периода
+    remaining_seconds = played_time % seconds_per_period  # Секунды в текущем периоде
+
+    minutes = remaining_seconds // 60  # Минуты в текущем периоде
+    seconds = remaining_seconds % 60  # Оставшиеся секунды
+
+    return f"{period} - {minutes} - {seconds}"
+
+
 # Множество для хранения идентификаторов событий, о которых уже было уведомление
 notified_events = set()
 
@@ -48,9 +61,9 @@ async def check_conditions_and_notify(events, bot):
         if event['id'] not in notified_events:
             logging.info(f"Проверка условия для события {event['id']}")
             if event['played_time'] > 1800 and (event['home_score'] == 0 or event['away_score'] == 0):
-                message = (f"Матч: {event['home_team']} vs {event['away_team']}\n"
+                message = (f"Матч: {event['home_team']} vs {event['away_team']}\n\n"
                            f"Счет: {event['home_score']} - {event['away_score']}\n"
-                           f"Время игры: {event['played_time']} секунд\n"
+                           f"Время игры: {format_time(event['played'])} секунд\n"
                            "Один из счетов равен 0!")
                 logging.info(f"Отправка уведомления для события {event['id']}")
                 await bot.send_message(chat_id=CHAT_ID, text=message)
