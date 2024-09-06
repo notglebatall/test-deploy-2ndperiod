@@ -1,8 +1,10 @@
-import requests
 import logging
 import schedule
 import asyncio
+
 from telegram import Bot
+from selenium import webdriver
+from parser import get_values, get_team_names
 
 # URL целевой страницы с матчами
 URL = 'https://www.sofascore.com/api/v1/sport/ice-hockey/events/live'
@@ -16,72 +18,60 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-
-def format_time(played_time):
-    # Каждый период длится 20 минут = 1200 секунд
-    seconds_per_period = 1200
-
-    period = (played_time // seconds_per_period) + 1  # Определение текущего периода
-    remaining_seconds = played_time % seconds_per_period  # Секунды в текущем периоде
-
-    minutes = remaining_seconds // 60  # Минуты в текущем периоде
-    seconds = remaining_seconds % 60  # Оставшиеся секунды
-
-    return f"{period} период, {minutes} минута, {seconds} секунда"
-
-
 # Множество для хранения идентификаторов событий, о которых уже было уведомление
 notified_events = set()
 
-def parse_events():
-    try:
-        response = requests.get(URL)
-        data = response.json()
-        events = [x for x in data['events']]
-        result = []
-        for event in events:
-            if all(k in event for k in ('id', 'homeTeam', 'homeScore', 'awayTeam', 'awayScore', 'time')) and 'played' in \
-                    event['time']:
-                result.append({
-                    'id': event['id'],
-                    'home_team': event['homeTeam']['name'],
-                    'home_score': event['homeScore']['current'],
-                    'away_team': event['awayTeam']['name'],
-                    'away_score': event['awayScore']['current'],
-                    'played_time': event['time']['played']
-                })
-        return result
-    except Exception as e:
-        logging.error(f"Ошибка при парсинге событий: {e}")
-        return []
 
-async def check_conditions_and_notify(events, bot):
-    for event in events:
+async def check_conditions_and_notify(match_list, bot):
+    for match in match_list:
         # Уникальный идентификатор события используется, чтобы избежать повторных уведомлений
-        if event['id'] not in notified_events:
-            logging.info(f"Проверка условия для события {event['id']}")
-            if event['played_time'] > 1800 and (event['home_score'] == 0 or event['away_score'] == 0):
-                message = (f"Матч: {event['home_team']} vs {event['away_team']}\n\n"
-                           f"Счет: {event['home_score']} - {event['away_score']}\n"
-                           f"Время игры: {format_time(event['played_time'])}\n"
-                           "Один из счетов равен 0!")
-                logging.info(f"Отправка уведомления для события {event['id']}")
+        if match['name'] not in notified_events:
+            logging.info(f"Проверка условия для события {match['name']}")
+            if int(match['time'].split(':')[0]) >= 30 and (int(match['score_1']) == 0 or int(match['score_2']) == 0):
+                message = (f"Матч: {match['team_1']} - {match['team_2']}\n\n"
+                           f"Счет: {match['score_1']} - {match['score_2']}\n"
+                           f"Время игры: {match['time']}\n\n"
+                           f"Коэффициент на {match['team_1']} {match['total_text_1']}:\n\n"
+                           f"Больше: {match['value_more_1']}\n"
+                           f"Меньше: {match['value_less_1']}\n\n"
+                           f"Коэффициент на {match['team_2']} {match['total_text_2']}:\n\n"
+                           f"Больше: {match['value_more_2']}\n"
+                           f"Меньше: {match['value_less_2']}\n\n"
+                           f"Ссылка на событие: {match['link']}")
+                logging.info(f"Отправка уведомления для события {match['name']}")
                 await bot.send_message(chat_id=CHAT_ID, text=message)
-                notified_events.add(event['id'])  # Добавление события в множество уведомленных
+                notified_events.add(match['name'])  # Добавление события в множество уведомленных
+            else:
+                print(f'Событие {match['name']} не подходит')
+
 
 async def job():
     logging.info("Запуск парсера...")
-    events = parse_events()
     bot = Bot(token=TELEGRAM_TOKEN)
-    if events:
-        logging.info(f"Найдено {len(events)} событий для проверки.")
-        await check_conditions_and_notify(events, bot)
-    else:
-        logging.info('Новых событий нет')
-async def main():
-    # Запуск задачи каждые 5 минут
-    asyncio.create_task(job())
+    chrome_driver = None
 
+    try:
+        chrome_driver = webdriver.Chrome()
+        match_list = get_team_names(chrome_driver, url="https://fon.bet/live/hockey")
+        values_list = get_values(chrome_driver, match_list)
+
+        if values_list:
+            logging.info(f"Найдено {len(values_list)} событий для проверки.")
+            await check_conditions_and_notify(values_list, bot)
+        else:
+            logging.info('Новых событий нет')
+
+    except Exception as e:
+        logging.error(f"Ошибка в процессе работы job: {e}")
+
+    finally:
+        if chrome_driver:
+            chrome_driver.quit()
+            logging.info("ChromeDriver закрыт")
+
+
+async def main():
+    await asyncio.create_task(job())
     # Запуск задачи каждые 3 минуты
     schedule.every(3).minutes.do(lambda: asyncio.create_task(job()))
 
@@ -96,5 +86,3 @@ if __name__ == '__main__':
         asyncio.run(main())
     except KeyboardInterrupt:
         logging.info('Бот выключен')
-
-

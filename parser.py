@@ -43,7 +43,7 @@ def get_values(driver, matches):
                 EC.visibility_of_element_located((By.CSS_SELECTOR, 'span.scoreboard-timer__value--lpnFb'))
             )
             match_time = driver.find_element(By.CSS_SELECTOR, 'span.scoreboard-timer__value--lpnFb').text
-            print(match_time)
+
 
             WebDriverWait(driver, 10).until(
                 EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.column__t1--WCEcc'))
@@ -66,38 +66,38 @@ def get_values(driver, matches):
                 EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.group--sb27t'))
             )
             groups = table.find_elements(By.CSS_SELECTOR, "div.group--sb27t")
-            print(f'groups: {len(groups)}')
+
 
             WebDriverWait(driver, 10).until(
                 EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.market-group-box--fCog3'))
             )
             boxes = groups[-1].find_elements(By.CSS_SELECTOR, "div.market-group-box--fCog3")
-            print(f'boxes: {len(boxes)}')
+
 
             WebDriverWait(driver, 10).until(
                 EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.section--OIDNE._horizontal--rd1ss'))
             )
             sections = boxes[0].find_elements(By.CSS_SELECTOR, 'div.section--OIDNE._horizontal--rd1ss')
-            print(f'sections: {len(sections)}')
+
 
             WebDriverWait(driver, 10).until(
                 EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.normal-row--qsziU'))
             )
             rows = sections[0].find_elements(By.CSS_SELECTOR, 'div.normal-row--qsziU')
-            print(f'rows: {len(rows)}')
+
 
             rows_2 = sections[1].find_elements(By.CSS_SELECTOR, 'div.normal-row--qsziU')
-            print(f'rows: {len(rows)}')
+
 
 
             # Прокручиваем страницу к первому ряду
             driver.execute_script("arguments[0].scrollIntoView(true);", rows[0])
-            print("Прокручено к первому ряду")
+
 
             time.sleep(3)
 
             cells = rows[0].find_elements(By.CSS_SELECTOR, 'div.cell--NEHKQ')
-            print(f'cells: {len(cells)}')
+
 
             total_text_1 = cells[0].text
 
@@ -105,14 +105,14 @@ def get_values(driver, matches):
             value_less_1 = cells[2].find_elements(By.CSS_SELECTOR, 'div.value--v77pD')
 
             cells_2 = rows_2[0].find_elements(By.CSS_SELECTOR, 'div.cell--NEHKQ')
-            print(f'cells: {len(cells)}')
+
 
             total_text_2 = cells_2[0].text
 
             value_more_2 = cells_2[1].find_elements(By.CSS_SELECTOR, 'div.value--v77pD')
             value_less_2 = cells_2[2].find_elements(By.CSS_SELECTOR, 'div.value--v77pD')
 
-            values_data.append({
+            match_info = {
                 'name': match['name'],
                 'link': match['link'],
                 'team_1': team_name_1,
@@ -127,7 +127,11 @@ def get_values(driver, matches):
                 'value_more_2': value_more_2[0].text if value_more_2 else None,
                 'value_less_2': value_less_2[0].text if value_more_2 else None
 
-            })
+            }
+
+            print(f'Собрана информация по матчу: {match_info}\n')
+
+            values_data.append(match_info)
 
         except Exception as e:
             print(f"Ошибка при обработке матча {match['name']}: {str(e)}")
@@ -137,17 +141,5 @@ def get_values(driver, matches):
         driver.switch_to.window(original_window)
 
     return values_data
-
-test_list = [{
-    'name': 'Тест - Тест',
-    'link': 'https://fon.bet/live/hockey/13283/49235668'
-}]
-
-with webdriver.Chrome() as chrome_driver:
-    match_list = get_team_names(chrome_driver, url="https://fon.bet/live/hockey")
-    values_list = get_values(chrome_driver, test_list)
-
-print(values_list)
-
 
 
