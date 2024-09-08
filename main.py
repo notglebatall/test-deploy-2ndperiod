@@ -22,11 +22,6 @@ logging.basicConfig(
 # Множество для хранения идентификаторов событий, о которых уже было уведомление
 notified_events = set()
 
-chrome_options = Options()
-chrome_options.add_argument('--headless')  # Запуск в безголовом режиме
-chrome_options.add_argument('--no-sandbox')
-chrome_options.add_argument('--disable-dev-shm-usage')
-
 
 async def check_conditions_and_notify(match_list, bot):
     for match in match_list:
@@ -78,7 +73,7 @@ async def job():
     chrome_driver = None
 
     try:
-        chrome_driver = webdriver.Chrome(options=chrome_options)
+        chrome_driver = webdriver.Chrome()
         match_list = get_team_names(chrome_driver, url="https://fon.bet/live/hockey")
         values_list = get_values(chrome_driver, match_list)
 
