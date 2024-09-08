@@ -4,6 +4,7 @@ import asyncio
 
 from telegram import Bot
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from parser import get_values, get_team_names
 
 # URL целевой страницы с матчами
@@ -20,6 +21,8 @@ logging.basicConfig(
 
 # Множество для хранения идентификаторов событий, о которых уже было уведомление
 notified_events = set()
+
+service = Service('/usr/bin/chromedriver')
 
 
 async def check_conditions_and_notify(match_list, bot):
@@ -72,7 +75,7 @@ async def job():
     chrome_driver = None
 
     try:
-        chrome_driver = webdriver.Chrome()
+        chrome_driver = webdriver.Chrome(service=service)
         match_list = get_team_names(chrome_driver, url="https://fon.bet/live/hockey")
         values_list = get_values(chrome_driver, match_list)
 
