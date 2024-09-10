@@ -22,11 +22,18 @@ logging.basicConfig(
 # Множество для хранения идентификаторов событий, о которых уже было уведомление
 notified_events = set()
 
+chrome_options = Options()
+
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36")
+chrome_options.add_argument("--headless")
+
 
 async def check_conditions_and_notify(match_list, bot):
     for match in match_list:
         # Уникальный идентификатор события используется, чтобы избежать повторных уведомлений
-        if match['name'] not in notified_events:
+        if match['name'] not in notified_events and match["name"] != 'Не начался':
             logging.info(f"Проверка условия для события {match['name']}")
 
             # Основное условие по времени матча
@@ -73,7 +80,7 @@ async def job():
     chrome_driver = None
 
     try:
-        chrome_driver = webdriver.Chrome()
+        chrome_driver = webdriver.Chrome(options=chrome_options)
         match_list = get_team_names(chrome_driver, url="https://fon.bet/live/hockey")
         values_list = get_values(chrome_driver, match_list)
 
