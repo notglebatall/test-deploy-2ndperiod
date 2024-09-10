@@ -1,18 +1,35 @@
 import time
 
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
+def scroll_to_bottom(driver):
+    SCROLL_PAUSE_TIME = 2  # Задайте время паузы между прокрутками
+
+    last_height = driver.execute_script("return document.body.scrollHeight")
+
+    while True:
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+        time.sleep(SCROLL_PAUSE_TIME)
+
+        new_height = driver.execute_script("return document.body.scrollHeight")
+        if new_height == last_height:
+            break
+        last_height = new_height
+
+
+# Используйте эту функцию в вашем коде
 def get_team_names(driver, url="https://fon.bet/live/hockey"):
     driver.get(url)
 
+    scroll_to_bottom(driver)
 
     css_selector = "a.table-component-text--Tjj3g.sport-event__name--YAs00._clickable--xICGO._event-view--nrsM2._compact--MZ0VP[data-testid='event']"
 
-    WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, css_selector)))
+    WebDriverWait(driver, 20).until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, css_selector)))
     matches = driver.find_elements(By.CSS_SELECTOR, css_selector)
 
     match_list = [{
