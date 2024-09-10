@@ -25,11 +25,13 @@ def scroll_to_bottom(driver):
 def get_team_names(driver, url="https://fon.bet/live/hockey"):
     driver.get(url)
 
+    WebDriverWait(driver, 10)
+
     scroll_to_bottom(driver)
 
     css_selector = "a.table-component-text--Tjj3g.sport-event__name--YAs00._clickable--xICGO._event-view--nrsM2._compact--MZ0VP[data-testid='event']"
 
-    WebDriverWait(driver, 20).until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, css_selector)))
+    WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, css_selector)))
     matches = driver.find_elements(By.CSS_SELECTOR, css_selector)
 
     match_list = [{
